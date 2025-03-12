@@ -13,32 +13,105 @@
             background: linear-gradient(135deg, #007bff, #00d4ff);
             margin: 0;
             padding: 0;
+            overflow: hidden;
+            height: 100vh;
         }
+
+        /* Splash Screen */
+        #splash-screen {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        #splash-screen h1 {
+            font-size: 32px;
+            color: #007bff;
+            animation: fadeIn 2s ease-in-out;
+        }
+
+        /* Main Content (Hidden Initially) */
+        #main-content {
+            display: none;
+        }
+
+        .header {
+            background: #007bff;
+            color: white;
+            padding: 15px;
+            font-size: 22px;
+            font-weight: bold;
+        }
+
+        /* Road Design */
+        .road-container {
+            position: relative;
+            width: 100%;
+            height: 120px;
+            background: #333;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        .road {
+            width: 100%;
+            height: 15px;
+            background: repeating-linear-gradient(
+                90deg, #fff 0px, #fff 40px, transparent 40px, transparent 80px
+            );
+            position: absolute;
+            top: 50%;
+            left: 0;
+            transform: translateY(-50%);
+        }
+
+        /* Moving Bus */
+        .bus {
+            width: 140px;
+            height: 60px;
+            background: url('https://upload.wikimedia.org/wikipedia/commons/9/99/US_School_Bus.jpg') no-repeat;
+            background-size: contain;
+            position: absolute;
+            top: 20px;
+            left: -150px;
+            animation: moveBus 6s linear infinite;
+        }
+
+        @keyframes moveBus {
+            0% { left: -150px; }
+            100% { left: 110%; }
+        }
+
+        /* Container */
         .container {
-            max-width: 400px;
+            max-width: 450px;
             margin: auto;
             background: white;
-            padding: 20px;
+            padding: 25px;
             border-radius: 15px;
             box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            margin-top: 10px;
         }
-        h2 { color: #333; }
+
         select, button {
             width: 90%;
-            padding: 10px;
+            padding: 12px;
             margin: 10px 0;
             border: none;
             border-radius: 5px;
-            font-size: 16px;
+            font-size: 18px;
         }
         button {
             background: #007bff;
             color: white;
             cursor: pointer;
         }
-        #map { height: 300px; border-radius: 10px; margin-top: 20px; }
+        #map { height: 350px; border-radius: 10px; margin-top: 20px; }
         #eta {
-            font-size: 18px;
+            font-size: 20px;
             font-weight: bold;
             color: #333;
             margin-top: 10px;
@@ -47,84 +120,71 @@
 </head>
 <body>
 
-<div class="container">
-    <h2>BusPath - Haryana Bus Tracking</h2>
-    
-    <label>From:</label>
-    <select id="fromStation">
-        <option value="28.4595,77.0266">Gurugram</option>
-        <option value="29.0588,76.0856">Rohtak</option>
-        <option value="29.6857,76.9905">Karnal</option>
-        <option value="28.4089,77.3178">Faridabad</option>
-        <option value="30.7363,76.7884">Panchkula</option>
-        <option value="29.3342,76.3756">Jind</option>
-        <option value="29.5513,75.1169">Sirsa</option>
-        <option value="29.1489,75.7362">Hisar</option>
-        <option value="28.7994,76.1340">Jhajjar</option>
-        <option value="29.6857,75.9205">Kaithal</option>
-        <option value="29.3780,76.9728">Kurukshetra</option>
-        <option value="29.4942,75.0130">Fatehabad</option>
-        <option value="28.9796,76.0652">Charkhi Dadri</option>
-        <option value="29.0600,76.6100">Bhiwani</option>
-        <option value="29.7500,76.5500">Yamunanagar</option>
-        <option value="28.1000,76.1833">Mahendragarh</option>
-        <option value="28.8000,76.2833">Rewari</option>
-        <option value="29.5000,77.2500">Panipat</option>
-        <option value="29.0000,76.9167">Sonipat</option>
-        <option value="29.6833,76.9833">Ambala</option>
-        <option value="29.0333,77.0667">Palwal</option>
-        <option value="28.1167,76.8667">Nuh</option>
-    </select>
+<!-- Splash Screen -->
+<div id="splash-screen">
+    <h1>Welcome to BusPath</h1>
+</div>
 
-    <label>To:</label>
-    <select id="toStation">
-        <option value="29.0588,76.0856">Rohtak</option>
-        <option value="29.6857,76.9905">Karnal</option>
-        <option value="28.4089,77.3178">Faridabad</option>
-        <option value="28.4595,77.0266">Gurugram</option>
-        <option value="30.7363,76.7884">Panchkula</option>
-        <option value="29.3342,76.3756">Jind</option>
-        <option value="29.5513,75.1169">Sirsa</option>
-        <option value="29.1489,75.7362">Hisar</option>
-        <option value="28.7994,76.1340">Jhajjar</option>
-        <option value="29.6857,75.9205">Kaithal</option>
-        <option value="29.3780,76.9728">Kurukshetra</option>
-        <option value="29.4942,75.0130">Fatehabad</option>
-        <option value="28.9796,76.0652">Charkhi Dadri</option>
-        <option value="29.0600,76.6100">Bhiwani</option>
-        <option value="29.7500,76.5500">Yamunanagar</option>
-        <option value="28.1000,76.1833">Mahendragarh</option>
-        <option value="28.8000,76.2833">Rewari</option>
-        <option value="29.5000,77.2500">Panipat</option>
-        <option value="29.0000,76.9167">Sonipat</option>
-        <option value="29.6833,76.9833">Ambala</option>
-        <option value="29.0333,77.0667">Palwal</option>
-        <option value="28.1167,76.8667">Nuh</option>
-    </select>
+<!-- Main App Content -->
+<div id="main-content">
+    <!-- UI Header -->
+    <div class="header">Welcome to BusPath</div>
 
-    <button onclick="trackBus()">Track Bus</button>
+    <!-- Road with Moving Bus -->
+    <div class="road-container">
+        <div class="road"></div>
+        <div class="bus"></div>
+    </div>
 
-    <div id="map"></div>
-    <div id="eta"></div>
+    <div class="container">
+        <h2>BusPath - Haryana Bus Tracking</h2>
+
+        <label>From:</label>
+        <select id="fromStation">
+            <option value="28.4595,77.0266">Gurugram</option>
+            <option value="29.0588,76.0856">Rohtak</option>
+            <option value="29.6857,76.9905">Karnal</option>
+            <option value="28.4089,77.3178">Faridabad</option>
+            <option value="30.7363,76.7884">Panchkula</option>
+            <option value="29.3342,76.3756">Jind</option>
+            <option value="29.5513,75.1169">Sirsa</option>
+            <option value="29.1489,75.7362">Hisar</option>
+            <option value="28.7994,76.1340">Jhajjar</option>
+            <option value="29.6857,75.9205">Kaithal</option>
+            <option value="29.3780,76.9728">Kurukshetra</option>
+            <option value="29.4942,75.0130">Fatehabad</option>
+            <option value="28.9796,76.0652">Charkhi Dadri</option>
+            <option value="29.0600,76.6100">Bhiwani</option>
+            <option value="29.7500,76.5500">Yamunanagar</option>
+            <option value="28.1000,76.1833">Mahendragarh</option>
+            <option value="28.8000,76.2833">Rewari</option>
+            <option value="29.5000,77.2500">Panipat</option>
+            <option value="29.0000,76.9167">Sonipat</option>
+            <option value="29.6833,76.9833">Ambala</option>
+            <option value="29.0333,77.0667">Palwal</option>
+            <option value="28.1167,76.8667">Nuh</option>
+        </select>
+
+        <label>To:</label>
+        <select id="toStation">
+            <option value="29.0588,76.0856">Rohtak</option>
+            <option value="29.6857,76.9905">Karnal</option>
+            <option value="28.4089,77.3178">Faridabad</option>
+            <option value="28.4595,77.0266">Gurugram</option>
+        </select>
+
+        <button onclick="trackBus()">Track Bus</button>
+
+        <div id="map"></div>
+        <div id="eta"></div>
+    </div>
 </div>
 
 <script>
-    function trackBus() {
-        let from = document.getElementById("fromStation").value.split(",");
-        let to = document.getElementById("toStation").value.split(",");
-
-        let map = L.map('map').setView([from[0], from[1]], 8);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-
-        L.marker(from).addTo(map).bindPopup("From Station").openPopup();
-        L.marker(to).addTo(map).bindPopup("To Station");
-
-        let route = L.polyline([from, to], { color: 'blue' }).addTo(map);
-
-        let distance = 80; // Estimated Distance (in km)
-        let eta = Math.round((distance / 50) * 60);
-        document.getElementById("eta").innerHTML = "ETA: " + eta + " min";
-    }
+    setTimeout(function() {
+        document.getElementById('splash-screen').style.display = 'none';
+        document.getElementById('main-content').style.display = 'block';
+    }, 3000);
 </script>
 
 </body>
