@@ -13,88 +13,20 @@
             background: linear-gradient(135deg, #007bff, #00d4ff);
             margin: 0;
             padding: 0;
-            overflow-x: hidden;
         }
-
-        /* Splash Screen */
-        #splash-screen {
+        .splash-screen {
             position: fixed;
             width: 100%;
             height: 100%;
             background: white;
             display: flex;
-            align-items: center;
             justify-content: center;
-            z-index: 1000;
-        }
-
-        #splash-screen h1 {
-            font-size: 32px;
-            color: #007bff;
-            animation: fadeIn 2s ease-in-out;
-        }
-
-        @keyframes fadeIn {
-            0% { opacity: 0; }
-            100% { opacity: 1; }
-        }
-
-        .header {
-            background: #007bff;
-            color: white;
-            padding: 15px;
-            font-size: 20px;
+            align-items: center;
+            font-size: 30px;
             font-weight: bold;
+            color: #007bff;
+            z-index: 9999;
         }
-
-        /* Road with Moving Bus */
-        .road-container {
-            position: relative;
-            width: 100%;
-            height: 100px;
-            background: #333;
-            margin-bottom: 20px;
-            overflow: hidden;
-        }
-        .road {
-            width: 100%;
-            height: 10px;
-            background: repeating-linear-gradient(
-                90deg, #fff 0px, #fff 30px, transparent 30px, transparent 60px
-            );
-            position: absolute;
-            top: 50%;
-            left: 0;
-            transform: translateY(-50%);
-        }
-        .bus {
-            width: 100px;
-            height: 50px;
-            background: red;
-            border-radius: 10px;
-            position: absolute;
-            top: 25%;
-            left: -100px;
-            animation: moveBus 5s linear infinite;
-        }
-        .bus::before,
-        .bus::after {
-            content: "";
-            width: 20px;
-            height: 20px;
-            background: black;
-            border-radius: 50%;
-            position: absolute;
-            bottom: -10px;
-        }
-        .bus::before { left: 10px; }
-        .bus::after { right: 10px; }
-
-        @keyframes moveBus {
-            0% { left: -100px; }
-            100% { left: 110%; }
-        }
-
         .container {
             max-width: 400px;
             margin: auto;
@@ -104,7 +36,6 @@
             box-shadow: 0 4px 8px rgba(0,0,0,0.2);
             margin-top: 10px;
         }
-
         select, button {
             width: 90%;
             padding: 10px;
@@ -118,137 +49,121 @@
             color: white;
             cursor: pointer;
         }
-        #map { height: 300px; border-radius: 10px; margin-top: 20px; }
+        #map {
+            height: 400px;
+            border-radius: 10px;
+            margin-top: 20px;
+            width: 100%;
+        }
         #eta {
             font-size: 18px;
             font-weight: bold;
             color: #333;
             margin-top: 10px;
         }
-
-        /* Hide content initially */
-        #main-content {
-            display: none;
-        }
     </style>
 </head>
 <body>
 
-<!-- Splash Screen -->
-<div id="splash-screen">
-    <h1>Welcome to BusPath</h1>
-</div>
+<div class="splash-screen" id="splash">BusPath Loading...</div>
 
-<!-- Main Content -->
-<div id="main-content">
-    <div class="header">Welcome to BusPath</div>
+<div class="container">
+    <h2>BusPath - Haryana Bus Tracking</h2>
 
-    <!-- Road with Moving Bus -->
-    <div class="road-container">
-        <div class="road"></div>
-        <div class="bus"></div>
-    </div>
+    <label>From:</label>
+    <select id="fromStation"></select>
 
-    <div class="container">
-        <h2>BusPath - Haryana Bus Tracking</h2>
+    <label>To:</label>
+    <select id="toStation"></select>
 
-        <label>From:</label>
-        <select id="fromStation">
-            <option value="28.4595,77.0266">Gurugram</option>
-            <option value="29.0588,76.0856">Rohtak</option>
-            <option value="29.6857,76.9905">Karnal</option>
-            <option value="28.4089,77.3178">Faridabad</option>
-            <option value="30.7363,76.7884">Panchkula</option>
-            <option value="29.3342,76.3756">Jind</option>
-            <option value="29.5513,75.1169">Sirsa</option>
-            <option value="29.1489,75.7362">Hisar</option>
-            <option value="28.7994,76.1340">Jhajjar</option>
-            <option value="29.6857,75.9205">Kaithal</option>
-            <option value="29.3780,76.9728">Kurukshetra</option>
-            <option value="29.4942,75.0130">Fatehabad</option>
-            <option value="28.9796,76.0652">Charkhi Dadri</option>
-            <option value="29.0600,76.6100">Bhiwani</option>
-            <option value="29.7500,76.5500">Yamunanagar</option>
-            <option value="28.1000,76.1833">Mahendragarh</option>
-            <option value="28.8000,76.2833">Rewari</option>
-            <option value="29.5000,77.2500">Panipat</option>
-            <option value="29.0000,76.9167">Sonipat</option>
-            <option value="29.6833,76.9833">Ambala</option>
-            <option value="29.0333,77.0667">Palwal</option>
-            <option value="28.1167,76.8667">Nuh</option>
-        </select>
+    <button onclick="trackBus()">Track Bus</button>
 
-        <label>To:</label>
-        <select id="toStation">
-            <option value="28.4595,77.0266">Gurugram</option>
-            <option value="29.0588,76.0856">Rohtak</option>
-            <option value="29.6857,76.9905">Karnal</option>
-            <option value="28.4089,77.3178">Faridabad</option>
-            <option value="30.7363,76.7884">Panchkula</option>
-            <option value="29.3342,76.3756">Jind</option>
-            <option value="29.5513,75.1169">Sirsa</option>
-            <option value="29.1489,75.7362">Hisar</option>
-            <option value="28.7994,76.1340">Jhajjar</option>
-            <option value="29.6857,75.9205">Kaithal</option>
-            <option value="29.3780,76.9728">Kurukshetra</option>
-            <option value="29.4942,75.0130">Fatehabad</option>
-            <option value="28.9796,76.0652">Charkhi Dadri</option>
-            <option value="29.0600,76.6100">Bhiwani</option>
-            <option value="29.7500,76.5500">Yamunanagar</option>
-            <option value="28.1000,76.1833">Mahendragarh</option>
-            <option value="28.8000,76.2833">Rewari</option>
-            <option value="29.5000,77.2500">Panipat</option>
-            <option value="29.0000,76.9167">Sonipat</option>
-            <option value="29.6833,76.9833">Ambala</option>
-            <option value="29.0333,77.0667">Palwal</option>
-            <option value="28.1167,76.8667">Nuh</option>
-        </select>
-
-        <button onclick="trackBus()">Track Bus</button>
-
-        <div id="map"></div>
-        <div id="eta"></div>
-    </div>
+    <div id="map"></div>
+    <div id="eta"></div>
 </div>
 
 <script>
-    setTimeout(function() {
-        document.getElementById('splash-screen').style.display = 'none';
-        document.getElementById('main-content').style.display = 'block';
+    // Splash Screen Hide after 3 seconds
+    setTimeout(() => {
+        document.getElementById("splash").style.display = "none";
     }, 3000);
 
-    let map, fromMarker, toMarker, routeLine;
+    let stations = {
+        "Ambala": [30.3782, 76.7767],
+        "Bhiwani": [28.7996, 76.1320],
+        "Charkhi Dadri": [28.6005, 76.2711],
+        "Faridabad": [28.4089, 77.3178],
+        "Fatehabad": [29.5246, 75.4556],
+        "Gurugram": [28.4595, 77.0266],
+        "Hisar": [29.1489, 75.7362],
+        "Jhajjar": [28.6065, 76.6565],
+        "Jind": [29.3162, 76.3144],
+        "Kaithal": [29.8019, 76.3993],
+        "Karnal": [29.6857, 76.9905],
+        "Kurukshetra": [29.9695, 76.8783],
+        "Mahendragarh": [28.2702, 76.1565],
+        "Nuh": [28.1004, 76.9905],
+        "Palwal": [28.1442, 77.3301],
+        "Panchkula": [30.7363, 76.7884],
+        "Panipat": [29.3909, 76.9635],
+        "Rewari": [28.1904, 76.6180],
+        "Rohtak": [29.0588, 76.0856],
+        "Sirsa": [29.5336, 75.0317],
+        "Sonipat": [28.9954, 77.0184],
+        "Yamunanagar": [30.129, 77.2674]
+    };
 
-    function initMap() {
-        map = L.map('map').setView([28.4595, 77.0266], 8);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+    let fromDropdown = document.getElementById("fromStation");
+    let toDropdown = document.getElementById("toStation");
+
+    for (let key in stations) {
+        let option1 = new Option(key, key);
+        let option2 = new Option(key, key);
+        fromDropdown.add(option1);
+        toDropdown.add(option2);
     }
+
+    // Initialize Map Properly
+    let map = L.map('map').setView([28.4595, 77.0266], 7);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    let markers = [];
 
     function trackBus() {
-        let from = document.getElementById("fromStation").value.split(",");
-        let to = document.getElementById("toStation").value.split(",");
+        let fromStation = document.getElementById("fromStation").value;
+        let toStation = document.getElementById("toStation").value;
 
-        let fromLatLng = [parseFloat(from[0]), parseFloat(from[1])];
-        let toLatLng = [parseFloat(to[0]), parseFloat(to[1])];
+        if (fromStation === toStation) {
+            alert("Please select different stations!");
+            return;
+        }
 
-        if (fromMarker) map.removeLayer(fromMarker);
-        if (toMarker) map.removeLayer(toMarker);
-        if (routeLine) map.removeLayer(routeLine);
+        let fromLatLng = stations[fromStation];
+        let toLatLng = stations[toStation];
 
-        fromMarker = L.marker(fromLatLng).addTo(map).bindPopup("From Station").openPopup();
-        toMarker = L.marker(toLatLng).addTo(map).bindPopup("To Station");
+        markers.forEach(marker => map.removeLayer(marker));
+        markers = [];
 
-        routeLine = L.polyline([fromLatLng, toLatLng], { color: 'blue' }).addTo(map);
+        let fromMarker = L.marker(fromLatLng).addTo(map).bindPopup(`From: ${fromStation}`).openPopup();
+        let toMarker = L.marker(toLatLng).addTo(map).bindPopup(`To: ${toStation}`);
+        markers.push(fromMarker, toMarker);
 
-        let distance = 80; // Estimated Distance (in km)
-        let eta = Math.round((distance / 50) * 60);
-        document.getElementById("eta").innerHTML = "ETA: " + eta + " min";
+        map.fitBounds([fromLatLng, toLatLng]);
 
-        let bounds = L.latLngBounds([fromLatLng, toLatLng]);
-        map.fitBounds(bounds);
+        let distance = getDistance(fromLatLng[0], fromLatLng[1], toLatLng[0], toLatLng[1]);
+        let etaTime = Math.round(distance / 50 * 60);
+        document.getElementById('eta').innerHTML = `Estimated Travel Time: ${etaTime} minutes`;
     }
 
-    initMap();
+    function getDistance(lat1, lon1, lat2, lon2) {
+        const R = 6371;
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLon = (lon2 - lon1) * Math.PI / 180;
+        const a = Math.sin(dLat/2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) ** 2;
+        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    }
 </script>
 
 </body>
