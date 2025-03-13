@@ -1,170 +1,223 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BusPath - Haryana Bus Tracking</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <title>BusPath - Haryana State Transport</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY"></script>
+    <script src="app.js"></script>
     <style>
-        body {
-            font-family: 'Arial', sans-serif;
-            text-align: center;
-            background: linear-gradient(135deg, #007bff, #00d4ff);
+        * {
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', sans-serif;
         }
-        .splash-screen {
-            position: fixed;
-            width: 100%;
-            height: 100%;
-            background: white;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 30px;
-            font-weight: bold;
-            color: #007bff;
-            z-index: 9999;
-        }
+
         .container {
-            max-width: 400px;
-            margin: auto;
-            background: white;
+            max-width: 1200px;
+            margin: 0 auto;
             padding: 20px;
-            border-radius: 15px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-            margin-top: 10px;
         }
-        select, button {
-            width: 90%;
-            padding: 10px;
-            margin: 10px 0;
-            border: none;
-            border-radius: 5px;
+
+        header {
+            background: #1a73e8;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 20px;
+            border-radius: 8px;
+        }
+
+        .search-section {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        select {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
             font-size: 16px;
         }
-        button {
-            background: #007bff;
+
+        #searchButton {
+            padding: 12px 30px;
+            background: #1a73e8;
             color: white;
+            border: none;
+            border-radius: 6px;
             cursor: pointer;
+            font-size: 16px;
         }
+
         #map {
             height: 400px;
-            border-radius: 10px;
-            margin-top: 20px;
-            width: 100%;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
         }
-        #eta {
-            font-size: 18px;
+
+        .bus-card {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .bus-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .bus-type {
+            background: #e8f0fe;
+            color: #1a73e8;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .bus-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .time-info {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .journey-line {
+            height: 2px;
+            width: 50px;
+            background: #ddd;
+        }
+
+        .fare {
+            font-size: 20px;
             font-weight: bold;
-            color: #333;
-            margin-top: 10px;
+            color: #1a73e8;
+        }
+
+        .track-btn {
+            width: 100%;
+            padding: 10px;
+            margin-top: 15px;
+            background: #34a853;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        @media (max-width: 768px) {
+            .search-section {
+                flex-direction: column;
+            }
+            
+            select, #searchButton {
+                width: 100%;
+            }
         }
     </style>
 </head>
 <body>
+    <div class="container">
+        <header>
+            <h1>BusPath - Haryana State Transport</h1>
+        </header>
 
-<div class="splash-screen" id="splash">BusPath Loading...</div>
+        <div class="search-section">
+            <select id="fromDistrict">
+                <option value="">Select Source District</option>
+            </select>
+            <select id="toDistrict">
+                <option value="">Select Destination District</option>
+            </select>
+            <button id="searchButton">Search Buses</button>
+        </div>
 
-<div class="container">
-    <h2>BusPath - Haryana Bus Tracking</h2>
+        <div id="busList"></div>
+        
+        <div id="map"></div>
+    </div>
+</body>
+</html><!DOCTYPE html>
+<html>
+<head>
+    <title>BusPath - Haryana State Transport</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY"></script>
+    <script src="app.js"></script>
+    <style>
+        /* Previous styles remain same */
 
-    <label>From:</label>
-    <select id="fromStation"></select>
-
-    <label>To:</label>
-    <select id="toStation"></select>
-
-    <button onclick="trackBus()">Track Bus</button>
-
-    <div id="map"></div>
-    <div id="eta"></div>
-</div>
-
-<script>
-    // Splash Screen Hide after 3 seconds
-    setTimeout(() => {
-        document.getElementById("splash").style.display = "none";
-    }, 3000);
-
-    let stations = {
-        "Ambala": [30.3782, 76.7767],
-        "Bhiwani": [28.7996, 76.1320],
-        "Charkhi Dadri": [28.6005, 76.2711],
-        "Faridabad": [28.4089, 77.3178],
-        "Fatehabad": [29.5246, 75.4556],
-        "Gurugram": [28.4595, 77.0266],
-        "Hisar": [29.1489, 75.7362],
-        "Jhajjar": [28.6065, 76.6565],
-        "Jind": [29.3162, 76.3144],
-        "Kaithal": [29.8019, 76.3993],
-        "Karnal": [29.6857, 76.9905],
-        "Kurukshetra": [29.9695, 76.8783],
-        "Mahendragarh": [28.2702, 76.1565],
-        "Nuh": [28.1004, 76.9905],
-        "Palwal": [28.1442, 77.3301],
-        "Panchkula": [30.7363, 76.7884],
-        "Panipat": [29.3909, 76.9635],
-        "Rewari": [28.1904, 76.6180],
-        "Rohtak": [29.0588, 76.0856],
-        "Sirsa": [29.5336, 75.0317],
-        "Sonipat": [28.9954, 77.0184],
-        "Yamunanagar": [30.129, 77.2674]
-    };
-
-    let fromDropdown = document.getElementById("fromStation");
-    let toDropdown = document.getElementById("toStation");
-
-    for (let key in stations) {
-        let option1 = new Option(key, key);
-        let option2 = new Option(key, key);
-        fromDropdown.add(option1);
-        toDropdown.add(option2);
-    }
-
-    // Initialize Map Properly
-    let map = L.map('map').setView([28.4595, 77.0266], 7);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors'
-    }).addTo(map);
-
-    let markers = [];
-
-    function trackBus() {
-        let fromStation = document.getElementById("fromStation").value;
-        let toStation = document.getElementById("toStation").value;
-
-        if (fromStation === toStation) {
-            alert("Please select different stations!");
-            return;
+        /* Adding only Splash Screen Styles */
+        .splash-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #1a73e8;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.5s;
         }
 
-        let fromLatLng = stations[fromStation];
-        let toLatLng = stations[toStation];
+        .splash-text {
+            color: white;
+            font-size: 32px;
+            font-weight: bold;
+            text-align: center;
+            animation: fadeInUp 1s ease-out;
+        }
 
-        markers.forEach(marker => map.removeLayer(marker));
-        markers = [];
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
 
-        let fromMarker = L.marker(fromLatLng).addTo(map).bindPopup(`From: ${fromStation}`).openPopup();
-        let toMarker = L.marker(toLatLng).addTo(map).bindPopup(`To: ${toStation}`);
-        markers.push(fromMarker, toMarker);
+        /* Previous styles remain same */
+    </style>
+</head>
+<body>
+    <!-- Splash Screen -->
+    <div class="splash-screen" id="splashScreen">
+        <div class="splash-text">
+            Welcome to BusPath
+        </div>
+    </div>
 
-        map.fitBounds([fromLatLng, toLatLng]);
+    <!-- Main Content (your existing content) -->
+    <div class="container" style="display: none;" id="mainContent">
+        <!-- Your previous HTML content -->
+        <header>
+            <h1>BusPath - Haryana State Transport</h1>
+        </header>
 
-        let distance = getDistance(fromLatLng[0], fromLatLng[1], toLatLng[0], toLatLng[1]);
-        let etaTime = Math.round(distance / 50 * 60);
-        document.getElementById('eta').innerHTML = `Estimated Travel Time: ${etaTime} minutes`;
-    }
+        <div class="search-section">
+            <!-- Your existing select options and button -->
+        </div>
 
-    function getDistance(lat1, lon1, lat2, lon2) {
-        const R = 6371;
-        const dLat = (lat2 - lat1) * Math.PI / 180;
-        const dLon = (lon2 - lon1) * Math.PI / 180;
-        const a = Math.sin(dLat/2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) ** 2;
-        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    }
-</script>
-
+        <div id="busList"></div>
+        <div id="map"></div>
+    </div>
 </body>
 </html>
