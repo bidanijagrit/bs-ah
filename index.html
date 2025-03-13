@@ -309,4 +309,210 @@
         }
     </script>
 </body>
+</html><!DOCTYPE html>
+<html>
+<head>
+    <title>BusPath - Haryana Bus Tracker</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        /* ... existing styles ... */
+
+        .route-info {
+            background: white;
+            margin: 10px 15px;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .stop-point {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+            position: relative;
+        }
+
+        .stop-dot {
+            width: 12px;
+            height: 12px;
+            background: #1a73e8;
+            border-radius: 50%;
+            margin-right: 15px;
+        }
+
+        .stop-line {
+            position: absolute;
+            left: 5px;
+            top: 12px;
+            width: 2px;
+            height: calc(100% + 10px);
+            background: #1a73e8;
+        }
+
+        .stop-info {
+            flex-grow: 1;
+        }
+
+        .stop-time {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .current-location {
+            background: #34a853;
+        }
+
+        .completed {
+            background: #666;
+        }
+
+        .upcoming {
+            background: #1a73e8;
+        }
+    </style>
+</head>
+<body>
+    <!-- ... existing HTML ... -->
+
+    <script>
+        // ... existing variables and functions ...
+
+        // Add intermediate stops data
+        const routeStops = {
+            'ambala-karnal': ['Ambala', 'Shahabad', 'Kurukshetra', 'Nilokheri', 'Taraori', 'Karnal'],
+            'karnal-panipat': ['Karnal', 'Gharaunda', 'Samalkha', 'Panipat'],
+            'panipat-sonipat': ['Panipat', 'Ganaur', 'Sonipat'],
+            'sonipat-delhi': ['Sonipat', 'Kundli', 'Delhi'],
+            // Add more routes as needed
+        };
+
+        function getRouteStops(from, to) {
+            // Try to find direct route
+            const directRoute = Object.keys(routeStops).find(route => 
+                route.startsWith(from.toLowerCase()) && route.endsWith(to.toLowerCase())
+            );
+
+            if (directRoute) {
+                return routeStops[directRoute];
+            }
+
+            // If no direct route, return basic array with just source and destination
+            return [from.charAt(0).toUpperCase() + from.slice(1), 
+                    to.charAt(0).toUpperCase() + to.slice(1)];
+        }
+
+        function generateBuses(from, to) {
+            const buses = [];
+            const count = Math.floor(Math.random() * 3) + 2;
+            const stops = getRouteStops(from, to);
+
+            for (let i = 0; i < count; i++) {
+                const startTime = generateRandomTime();
+                const stopTimes = generateStopTimes(stops.length, startTime);
+
+                buses.push({
+                    id: 'HR-' + Math.floor(Math.random() * 9000 + 1000),
+                    type: ['AC Volvo', 'Non-AC Deluxe', 'AC Semi-Deluxe'][Math.floor(Math.random() * 3)],
+                    departure: startTime,
+                    arrival: stopTimes[stopTimes.length - 1],
+                    fare: Math.floor(Math.random() * 500) + 200,
+                    from: from,
+                    to: to,
+                    stops: stops,
+                    stopTimes: stopTimes,
+                    currentStop: Math.floor(Math.random() * stops.length)
+                });
+            }
+            return buses;
+        }
+
+        function generateStopTimes(numStops, startTime) {
+            const times = [startTime];
+            let currentTime = new Date('2024-01-01 ' + startTime);
+
+            for (let i = 1; i < numStops; i++) {
+                currentTime = new Date(currentTime.getTime() + (Math.random() * 30 + 15) * 60000);
+                times.push(currentTime.toTimeString().slice(0, 5));
+            }
+
+            return times;
+        }
+
+        function displayBuses(buses) {
+            const busListDiv = document.getElementById('busList');
+            busListDiv.innerHTML = '';
+
+            buses.forEach(bus => {
+                const busCard = document.createElement('div');
+                busCard.className = 'bus-card';
+                
+                let stopsHTML = '';
+                bus.stops.forEach((stop, index) => {
+                    const status = index < bus.currentStop ? 'completed' : 
+                                 index === bus.currentStop ? 'current-location' : 'upcoming';
+                    
+                    stopsHTML += `
+                        <div class="stop-point">
+                            <div class="stop-dot ${status}"></div>
+                            ${index < bus.stops.length - 1 ? '<div class="stop-line"></div>' : ''}
+                            <div class="stop-info">
+                                <div>${stop}</div>
+                                <div class="stop-time">${bus.stopTimes[index]}</div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                busCard.innerHTML = `
+                    <div class="bus-header">
+                        <strong>${bus.id}</strong>
+                        <span>${bus.type}</span>
+                    </div>
+                    <div class="route-info">
+                        ${stopsHTML}
+                    </div>
+                    <button class="track-btn" onclick="trackBus('${bus.id}')">Track Bus</button>
+                `;
+                busListDiv.appendChild(busCard);
+            });
+        }
+
+        function trackBus(busId) {
+            const bus = currentBuses.find(b => b.id === busId);
+            if (!bus) return;
+
+            document.getElementById('mapContainer').style.display = 'block';
+            map.invalidateSize();
+
+            // Clear previous layers
+            map.eachLayer((layer) => {
+                if (layer instanceof L.Marker || layer instanceof L.Polyline) {
+                    map.removeLayer(layer);
+                }
+            });
+
+            // Add markers for all stops
+            const coordinates = bus.stops.map(stop => {
+                const coord = districtCoords[stop.toLowerCase()];
+                if (coord) {
+                    const marker = L.marker(coord)
+                        .addTo(map)
+                        .bindPopup(`${stop}<br>Time: ${bus.stopTimes[bus.stops.indexOf(stop)]}`);
+                    return coord;
+                }
+                return null;
+            }).filter(coord => coord !== null);
+
+            // Draw route line
+            if (coordinates.length > 1) {
+                L.polyline(coordinates, {color: 'blue'}).addTo(map);
+                map.fitBounds(coordinates);
+            }
+        }
+
+        // ... rest of the existing code ...
+    </script>
+</body>
 </html>
