@@ -3,7 +3,8 @@
 <head>
     <title>BusPath - Haryana Bus Tracker</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
         * {
             margin: 0;
@@ -12,7 +13,6 @@
             font-family: Arial, sans-serif;
         }
 
-        /* Splash Screen */
         #splashScreen {
             position: fixed;
             top: 0;
@@ -23,16 +23,11 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            z-index: 1000;
-        }
-
-        #splashScreen h1 {
+            z-index: 9999;
             color: white;
-            font-size: 2em;
-            text-align: center;
+            font-size: 24px;
         }
 
-        /* Main App */
         #mainApp {
             display: none;
         }
@@ -52,10 +47,11 @@
 
         select {
             width: 100%;
-            padding: 10px;
-            margin: 5px 0;
+            padding: 12px;
+            margin: 8px 0;
             border: 1px solid #ddd;
             border-radius: 4px;
+            font-size: 16px;
         }
 
         button {
@@ -65,19 +61,16 @@
             color: white;
             border: none;
             border-radius: 4px;
-            margin-top: 10px;
+            font-size: 16px;
             cursor: pointer;
-        }
-
-        #busList {
-            padding: 15px;
+            margin-top: 10px;
         }
 
         .bus-card {
             background: white;
+            margin: 10px 15px;
             padding: 15px;
-            margin-bottom: 10px;
-            border-radius: 4px;
+            border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
@@ -91,27 +84,31 @@
             display: flex;
             justify-content: space-between;
             color: #666;
-        }
-
-        #map {
-            height: 300px;
-            margin: 15px;
-            display: none;
+            margin-bottom: 10px;
         }
 
         .track-btn {
             background: #34a853;
-            margin-top: 10px;
+        }
+
+        #mapContainer {
+            padding: 15px;
+            display: none;
+        }
+
+        #map {
+            height: 400px;
+            width: 100%;
+            border-radius: 8px;
+            border: 1px solid #ddd;
         }
     </style>
 </head>
 <body>
-    <!-- Splash Screen -->
     <div id="splashScreen">
-        <h1>Welcome to BusPath</h1>
+        Welcome to BusPath
     </div>
 
-    <!-- Main App -->
     <div id="mainApp">
         <div class="header">
             <h1>BusPath</h1>
@@ -174,57 +171,55 @@
         </div>
 
         <div id="busList"></div>
-        <div id="map"></div>
+        <div id="mapContainer">
+            <div id="map"></div>
+        </div>
     </div>
 
     <script>
-        // District coordinates
-        const districtCoords = {
-            'ambala': { lat: 30.3752, lng: 76.7821 },
-            'bhiwani': { lat: 28.7975, lng: 76.1322 },
-            'charkhidadri': { lat: 28.5928, lng: 76.2718 },
-            'faridabad': { lat: 28.4089, lng: 77.3178 },
-            'fatehabad': { lat: 29.5155, lng: 75.4555 },
-            'gurugram': { lat: 28.4595, lng: 77.0266 },
-            'hisar': { lat: 29.1492, lng: 75.7217 },
-            'jhajjar': { lat: 28.6062, lng: 76.6566 },
-            'jind': { lat: 29.3164, lng: 76.3157 },
-            'kaithal': { lat: 29.8056, lng: 76.3984 },
-            'karnal': { lat: 29.6857, lng: 76.9905 },
-            'kurukshetra': { lat: 29.9695, lng: 76.8783 },
-            'mahendragarh': { lat: 28.2744, lng: 76.1498 },
-            'nuh': { lat: 28.1083, lng: 77.0019 },
-            'palwal': { lat: 28.1473, lng: 77.3260 },
-            'panchkula': { lat: 30.6942, lng: 76.8606 },
-            'panipat': { lat: 29.3909, lng: 76.9635 },
-            'rewari': { lat: 28.1920, lng: 76.6190 },
-            'rohtak': { lat: 28.8955, lng: 76.6066 },
-            'sirsa': { lat: 29.5321, lng: 75.0318 },
-            'sonipat': { lat: 28.9931, lng: 77.0151 },
-            'yamunanagar': { lat: 30.1290, lng: 77.2674 }
-        };
-
         let map;
         let currentBuses = [];
-        let markers = [];
-        let currentPath;
 
-        // Initialize after page load
+        // District coordinates
+        const districtCoords = {
+            'ambala': [30.3752, 76.7821],
+            'bhiwani': [28.7975, 76.1322],
+            'charkhidadri': [28.5928, 76.2718],
+            'faridabad': [28.4089, 77.3178],
+            'fatehabad': [29.5155, 75.4555],
+            'gurugram': [28.4595, 77.0266],
+            'hisar': [29.1492, 75.7217],
+            'jhajjar': [28.6062, 76.6566],
+            'jind': [29.3164, 76.3157],
+            'kaithal': [29.8056, 76.3984],
+            'karnal': [29.6857, 76.9905],
+            'kurukshetra': [29.9695, 76.8783],
+            'mahendragarh': [28.2744, 76.1498],
+            'nuh': [28.1083, 77.0019],
+            'palwal': [28.1473, 77.3260],
+            'panchkula': [30.6942, 76.8606],
+            'panipat': [29.3909, 76.9635],
+            'rewari': [28.1920, 76.6190],
+            'rohtak': [28.8955, 76.6066],
+            'sirsa': [29.5321, 75.0318],
+            'sonipat': [28.9931, 77.0151],
+            'yamunanagar': [30.1290, 77.2674]
+        };
+
+        // Initialize map
         window.onload = function() {
-            // Show splash screen for 2 seconds
             setTimeout(() => {
                 document.getElementById('splashScreen').style.display = 'none';
                 document.getElementById('mainApp').style.display = 'block';
             }, 2000);
 
             // Initialize map
-            map = new google.maps.Map(document.getElementById('map'), {
-                center: { lat: 29.0588, lng: 76.0856 },
-                zoom: 7
-            });
+            map = L.map('map').setView([29.0588, 76.0856], 7);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19
+            }).addTo(map);
         };
 
-        // Search buses
         function searchBuses() {
             const from = document.getElementById('fromDistrict').value;
             const to = document.getElementById('toDistrict').value;
@@ -234,16 +229,14 @@
                 return;
             }
 
-            // Generate random buses
             currentBuses = generateBuses(from, to);
             displayBuses(currentBuses);
-            document.getElementById('map').style.display = 'none';
+            document.getElementById('mapContainer').style.display = 'none';
         }
 
-        // Generate random buses
         function generateBuses(from, to) {
             const buses = [];
-            const count = Math.floor(Math.random() * 3) + 2; // 2-4 buses
+            const count = Math.floor(Math.random() * 3) + 2;
 
             for (let i = 0; i < count; i++) {
                 buses.push({
@@ -259,7 +252,6 @@
             return buses;
         }
 
-        // Display buses
         function displayBuses(buses) {
             const busListDiv = document.getElementById('busList');
             busListDiv.innerHTML = '';
@@ -282,50 +274,34 @@
             });
         }
 
-        // Track bus
         function trackBus(busId) {
             const bus = currentBuses.find(b => b.id === busId);
             if (!bus) return;
 
-            // Show map
-            document.getElementById('map').style.display = 'block';
+            document.getElementById('mapContainer').style.display = 'block';
+            map.invalidateSize();
 
-            // Clear previous markers and path
-            markers.forEach(marker => marker.setMap(null));
-            markers = [];
-            if (currentPath) currentPath.setMap(null);
+            // Clear previous layers
+            map.eachLayer((layer) => {
+                if (layer instanceof L.Marker || layer instanceof L.Polyline) {
+                    map.removeLayer(layer);
+                }
+            });
 
-            // Add markers for source and destination
             const fromCoord = districtCoords[bus.from];
             const toCoord = districtCoords[bus.to];
 
-            [fromCoord, toCoord].forEach((coord, i) => {
-                const marker = new google.maps.Marker({
-                    position: coord,
-                    map: map,
-                    title: i === 0 ? bus.from : bus.to
-                });
-                markers.push(marker);
-            });
+            // Add markers
+            L.marker(fromCoord).addTo(map);
+            L.marker(toCoord).addTo(map);
 
-            // Draw path
-            currentPath = new google.maps.Polyline({
-                path: [fromCoord, toCoord],
-                geodesic: true,
-                strokeColor: '#1a73e8',
-                strokeOpacity: 1.0,
-                strokeWeight: 3
-            });
-            currentPath.setMap(map);
+            // Draw route
+            L.polyline([fromCoord, toCoord], {color: 'blue'}).addTo(map);
 
-            // Fit map to show route
-            const bounds = new google.maps.LatLngBounds();
-            bounds.extend(fromCoord);
-            bounds.extend(toCoord);
-            map.fitBounds(bounds);
+            // Fit bounds
+            map.fitBounds([fromCoord, toCoord]);
         }
 
-        // Helper function to generate random time
         function generateRandomTime() {
             const hours = Math.floor(Math.random() * 24);
             const minutes = Math.floor(Math.random() * 60);
